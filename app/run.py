@@ -39,12 +39,24 @@ model = joblib.load("../models/classifier.pkl")
 def index():
     
     # extract data needed for visuals
-    # TODO: Below is an example - modify to extract data for your own visuals
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
     
+    # Get distribution of Message categories and message categories in genre news
+    category_counts = list()
+    category_counts_news = list()
+    labels = df.columns[4:]
+    for label in labels:
+        try:
+            category_counts.append(df.groupby(label).count()['message'][1])
+            category_counts_news.append(df.groupby(['genre', label]).count()['message']['news'][1])
+        except:
+            category_counts.append(0)
+            category_counts_news.append(0)
+    category_names = list(labels)
+
     # create visuals
-    # TODO: Below is an example - modify to create your own visuals
+    # create bar charts for message categories and news message categories
     graphs = [
         {
             'data': [
@@ -61,6 +73,42 @@ def index():
                 },
                 'xaxis': {
                     'title': "Genre"
+                }
+            }
+        },
+        {
+            'data': [
+                Bar(
+                    x=category_names,
+                    y=category_counts
+                )
+            ],
+
+            'layout': {
+                'title': 'Distribution of Message Categories',
+                'yaxis': {
+                    'title': "Count"
+                },
+                'xaxis': {
+                    'title': "Category"
+                }
+            }
+        },
+        {
+            'data': [
+                Bar(
+                    x=category_names,
+                    y=category_counts_news
+                )
+            ],
+
+            'layout': {
+                'title': 'Distribution of News Message Categories',
+                'yaxis': {
+                    'title': "Count"
+                },
+                'xaxis': {
+                    'title': "Category"
                 }
             }
         }
