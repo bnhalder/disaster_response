@@ -1,7 +1,6 @@
 import sys
 import sqlite3
 import pandas as pd
-import pickle
 from sqlalchemy import create_engine
 
 import nltk
@@ -15,13 +14,13 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.metrics import classification_report
+from sklearn.model_selection import GridSearchCV
+from sklearn.externals import joblib
 
 
 def load_data(database_filepath):
-    #conn = create_engine('sqlite:///InsertDatabaseName.db')
-    #df = pd.read_sql_table('InsertTableName', conn)
-    conn = sqlite3.connect('InsertDatabaseName.db')
-    df = pd.read_sql("SELECT * FROM InsertTableName", conn)
+    conn = create_engine('sqlite:///'+database_filepath)
+    df = pd.read_sql_table('disaster_messages_table', conn)
     X = df.message.values
     labels = df.columns[4:]
     y = df[labels].values
@@ -53,10 +52,10 @@ def build_model():
     ])
 
     parameters = {
-        'vect__ngram_range': ((1, 1), (1, 2)),
-        'vect__max_df': (0.5, 0.75, 1.0),
-        'vect__max_features': (None, 5000, 10000),
-        'tfidf__use_idf': (True, False),
+        #'vect__ngram_range': ((1, 1), (1, 2)),
+        #'vect__max_df': (0.5, 0.75, 1.0),
+        #'vect__max_features': (None, 5000, 10000),
+        #'tfidf__use_idf': (True, False),
         'clf__n_estimators': [50, 100, 200],
         'clf__min_samples_split': [2, 3, 4]
     }
@@ -66,12 +65,12 @@ def build_model():
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
-    y_pred = model.predict(X_test)
-    print(classification_report(y_train, y_pred, target_names=category_names))
+    Y_pred = model.predict(X_test)
+    print(classification_report(Y_test, Y_pred, target_names=category_names))
 
 
 def save_model(model, model_filepath):
-    pickle.dump(model, open(model_filepath, 'wb'))
+    model = joblib.dump(model, model_filepath)
 
 
 def main():
