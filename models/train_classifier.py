@@ -1,3 +1,4 @@
+# import libraries
 import sys
 import sqlite3
 import pandas as pd
@@ -19,38 +20,66 @@ from sklearn.externals import joblib
 
 
 def load_data(database_filepath):
+    """ Read data from sqlite database
+        arguments: database file name
+        returns: returns X, y and labels
+    """
+
+    # create sqlalchemy engine and read data from database
     conn = create_engine('sqlite:///'+database_filepath)
     df = pd.read_sql_table('disaster_messages_table', conn)
+    
+    # extract input strings for ML model
     X = df.message.values
+
+    # extract label data for ML model
     labels = df.columns[4:]
     y = df[labels].values
+
+    # returns x, y and labels
     return X, y, labels
 
 
 def tokenize(text):
+    """ String tokenizer
+        arguments: string text
+        returns: list of tokens
+    """
+ 
+    # detect url if any in input string and removes them using string 'urlplaceholder'
     url_regex = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
     detected_urls = re.findall(url_regex, text)
     for url in detected_urls:
         text = text.replace(url, "urlplaceholder")
     
+    # tokenize the text
     tokens = word_tokenize(text)
     lemmatizer = WordNetLemmatizer()
 
+    # clean tokens
     clean_tokens = []
     for tok in tokens:
         clean_tok = lemmatizer.lemmatize(tok).lower().strip()
         clean_tokens.append(clean_tok)
 
+    # return list of clean tokens
     return clean_tokens   
 
 
 def build_model():
+    """ Builds Machine learning pipeline
+        arguments: None
+        returns: Machine learning model
+    """
+
+    # build the pipeline
     pipeline = Pipeline([
         ('vect', CountVectorizer(tokenizer=tokenize)),
         ('tfidf', TfidfTransformer()),
         ('clf', RandomForestClassifier())
     ])
 
+    # builds the parameter list for grid search
     parameters = {
         #'vect__ngram_range': ((1, 1), (1, 2)),
         #'vect__max_df': (0.5, 0.75, 1.0),
@@ -60,16 +89,33 @@ def build_model():
         'clf__min_samples_split': [2, 3, 4]
     }
     
+    # create grid object
     grid_obj = GridSearchCV(pipeline, param_grid=parameters)
+    
+    #return grid object
     return grid_obj
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
+    """ Evaluate model on test set
+        arguments: model, test set, test labels, category names
+        retunrs: none
+    """
+
+    # get predictions
     Y_pred = model.predict(X_test)
+
+    # evaluate and get summary
     print(classification_report(Y_test, Y_pred, target_names=category_names))
 
 
 def save_model(model, model_filepath):
+    """ Save the trained model
+        arguments: model, filename
+        returns: None
+    """
+
+    # save model using joblib library
     model = joblib.dump(model, model_filepath)
 
 
