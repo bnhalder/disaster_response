@@ -15,6 +15,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.metrics import classification_report
+from sklearn.metrics import accuracy_score
 from sklearn.model_selection import GridSearchCV
 from sklearn.externals import joblib
 
@@ -104,6 +105,11 @@ def evaluate_model(model, X_test, Y_test, category_names):
 
     # get predictions
     Y_pred = model.predict(X_test)
+
+    # get accuracy score for each category
+    print("Accuracy Scores for all the categories are as follows - ")
+    for i, label in enumerate(category_names):
+        print("{}: {}".format(label, accuracy_score(Y_test[:, i], Y_pred[:, i])))
 
     # evaluate and get summary
     print(classification_report(Y_test, Y_pred, target_names=category_names))
